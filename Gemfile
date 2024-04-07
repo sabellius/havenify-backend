@@ -38,6 +38,15 @@ gem "bootsnap", require: false
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ]
+
+  # Test framework for Ruby on Rails applications
+  gem 'rspec-rails', '~> 6.1', '>= 6.1.1'
+
+  # Fixture replacement with integration to Rails
+  gem 'factory_bot_rails', '~> 6.4', '>= 6.4.3'
+
+  # Rspec-compatible one-liners to test common Rails functionality
+  gem 'shoulda-matchers', '~> 6.1'
 end
 
 group :development do
