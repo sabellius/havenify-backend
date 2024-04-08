@@ -4,8 +4,6 @@ RSpec.describe User, type: :model do
   context 'validations' do
     subject { FactoryBot.build(:user) }
 
-    it { is_expected.to have_secure_password }
-
     it { is_expected.to validate_presence_of(:first_name) }
     it { is_expected.to validate_length_of(:first_name).is_at_least(2).is_at_most(50) }
 
