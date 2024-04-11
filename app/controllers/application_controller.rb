@@ -18,10 +18,10 @@ class ApplicationController < ActionController::API
   end
 
   def record_invalid(exception)
-    render json: { error: exception.record.errors.full_messages.join(',') }, status: :unprocessable_entity
+    render json: { error: exception.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 
   def render_record_invalid(resource)
-    render json: { error: resource.errors }, status: :unprocessable_entity
+    render json: { error: resource.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 end
