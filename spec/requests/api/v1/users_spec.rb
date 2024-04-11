@@ -1,109 +1,99 @@
 require 'rails_helper'
 
 RSpec.describe 'Api::V1::Users', type: :request do
-  describe 'GET /api/v1/users/:id' do
+  describe 'GET #show' do
     let(:user) { create(:user) }
 
     context 'when the record exists' do
       before { get api_v1_user_path(user) }
 
-      it 'returns status code 200' do
-        expect(response).to have_http_status(200)
+      it 'returns status code ok' do
+        expect(response).to have_http_status(:ok)
       end
+
       it 'returns the user' do
-        expect(response.parsed_body.dig('data', 'id').to_i).to eq(user.id)
+        expect(json.dig('data', 'id').to_i).to eq(user.id)
       end
     end
 
     context 'when the record does not exist' do
-      non_existent_user_id = 9999
-      before { get api_v1_user_path(non_existent_user_id) }
+      before { get api_v1_user_path('non existent user id') }
 
-      it 'returns status code 404' do
-        expect(response).to have_http_status(404)
+      it 'returns status code not_found' do
+        expect(response).to have_http_status(:not_found)
       end
 
       it 'returns a not found message' do
-        expect(response.body).to match(/Record not found/)
+        expect(json['error']).to eq('Record not found')
       end
     end
   end
 
-  describe 'POST /api/v1/users' do
-    let(:valid_attributes) { build(:user).attributes }
+  describe 'POST #create' do
+    let(:valid_attributes) { attributes_for(:user) }
+    let(:invalid_attributes) { { first_name: '', last_name: '', email: '', password: '' } }
 
     context 'when the request is valid' do
-      before { post api_v1_users_path, params: valid_attributes }
+      before { post api_v1_users_path, params: { user: valid_attributes } }
 
-      it 'creates a user' do
-        expect(response).to have_http_status(201)
+      it 'returns status code created' do
+        expect(response).to have_http_status(:created)
       end
 
       it 'returns the user' do
-        expect(json['name']).to eq(valid_attributes['name'])
+        expect(json.dig('data', 'attributes', 'first_name')).to eq(valid_attributes[:first_name])
       end
     end
 
     context 'when the request is invalid' do
-      before { post api_v1_users_path, params: { user: { first_name: '' } } }
+      before { post api_v1_users_path, params: { user: invalid_attributes } }
 
-      it 'returns status code 422' do
-        expect(response).to have_http_status(422)
+      it 'returns status code unprocessable_entity' do
+        expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it 'returns a validation failure message' do
-        expected_errors = {
-          email: [
-            "can't be blank",
-            "can't be blank",
-            'is invalid'
-          ],
-          password: [
-            "can't be blank",
-            "can't be blank",
-            'is too short (minimum is 8 characters)',
-            'must include at least one lowercase letter, one uppercase letter, one digit, and one special character'
-          ],
-          first_name: [
-            "can't be blank",
-            'is too short (minimum is 2 characters)'
-          ],
-          last_name: [
-            "can't be blank",
-            'is too short (minimum is 2 characters)'
-          ]
-        }
-        expect(response.parsed_body.fetch('error').symbolize_keys).to eq(expected_errors)
+        expected_errors = <<~ERRORS.squish
+          First name can't be blank,
+          First name is too short (minimum is 2 characters),
+          Last name can't be blank,
+          Last name is too short (minimum is 2 characters),
+          Email can't be blank,
+          Email is invalid,
+          Password can't be blank,
+          Password is too short (minimum is 8 characters),
+          Password must include at least one lowercase letter, one uppercase letter, one digit, and one special character
+        ERRORS
+        expect(json['error']).to eq(expected_errors)
       end
     end
   end
 
-  describe 'PUT /api/v1/users/:id' do
+  describe 'PATCH #update' do
     let(:user) { create(:user) }
-    let(:valid_attributes) { build(:user, first_name: 'John').attributes }
+    let(:valid_attributes) { attributes_for(:user, first_name: 'John') }
 
     context 'when the request is valid' do
-      before { put api_v1_user_path(user), params: { user: valid_attributes } }
+      before { patch api_v1_user_path(user), params: { user: valid_attributes } }
 
-      it 'returns status code 204' do
-        debugger
-        expect(response).to have_http_status(200)
+      it 'returns status code ok' do
+        expect(response).to have_http_status(:ok)
       end
 
       it 'updates the requested user' do
-        expect(user.reload.first_name).to eq(valid_attributes['first_name'])
+        expect(user.reload.first_name).to eq(valid_attributes[:first_name])
       end
     end
 
     context 'when the request is invalid' do
-      before { put "/api/v1/users/#{user.id}", params: { name: '' } }
+      before { put api_v1_user_path(user), params: { user: { first_name: '' } } }
 
-      it 'returns validation errors' do
-        expect(response).to have_http_status(422)
+      it 'returns status code unprocessable_entity' do
+        expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it 'returns a validation failure message' do
-        expect(response.body).to match(/Validation failed: Name can't be blank/)
+        expect(json['error']).to eq("First name can't be blank, First name is too short (minimum is 2 characters)")
       end
     end
   end
