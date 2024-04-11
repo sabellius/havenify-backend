@@ -7,14 +7,9 @@ class Api::V1::RegistrationsController < Devise::RegistrationsController
   # before_action :configure_account_update_params, only: [:update]
 
   # POST /resource
-  def create
-    super do |user|
-      if user.persisted?
-        sign_up(resource_name, resource)
-
-      end
-    end
-  end
+  # def create
+  #   super
+  # end
 
   # GET /resource/edit
   # def edit
